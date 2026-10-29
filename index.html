@@ -1,0 +1,44 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Painel de confirmações</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Instrument+Serif&family=Newsreader:ital@1&display=swap" rel="stylesheet">
+<style>
+:root{--n:#0A0F1C;--p:#AEB6C2;--g:#EEF3F8;--m:#EFE6D4}*{box-sizing:border-box;margin:0}
+body{background:var(--n);color:var(--g);font:400 16px/1.5 Figtree,sans-serif;padding:24px 16px 60px;max-width:960px;margin:auto}
+h1{font:400 40px Instrument Serif,serif}.it{font:italic 400 18px Newsreader,serif;color:var(--p)}
+input,select,button,textarea{font:inherit;color:var(--g);background:rgba(238,243,248,.06);border:1px solid rgba(174,182,194,.5);border-radius:8px;padding:11px 14px;min-height:46px}
+button{cursor:pointer}button.pr{background:var(--g);color:var(--n);border-color:var(--g);font-weight:600}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.row input{flex:1;min-width:180px}
+.tot{display:flex;gap:26px;margin:20px 0}.tot b{display:block;font:400 40px/1 Instrument Serif,serif}.tot small{color:var(--p);font-size:13px;text-transform:uppercase;letter-spacing:.1em}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:720px}th,td{text-align:left;padding:12px 8px;border-bottom:1px solid rgba(174,182,194,.3);vertical-align:top}th{color:var(--p);font-size:13px;text-transform:uppercase;letter-spacing:.1em;font-weight:500}
+.tag{padding:3px 10px;border-radius:99px;border:1px solid var(--p);font-size:14px}.tag.p{background:var(--g);color:var(--n);border-color:var(--g)}
+dialog{background:#111a2c;color:var(--g);border:1px solid var(--p);border-radius:10px;padding:24px;width:min(92vw,420px)}dialog::backdrop{background:rgba(0,0,0,.6)}dialog label{display:block;margin:12px 0 6px;font-size:14px;color:var(--m)}dialog input,dialog select,dialog textarea{width:100%}
+#e{color:#ffc9c9;margin-top:10px}[hidden]{display:none!important}
+</style></head><body>
+<section id="lg"><h1>Painel de confirmações</h1><p class="it">Baile de Inverno — XV de Emanuelle</p>
+<form class="row" id="lf"><label for="pw" style="position:absolute;left:-9999px">Senha</label><input id="pw" type="password" placeholder="Senha" autocomplete="current-password" required><button class="pr">Entrar</button></form><p id="e" role="alert"></p></section>
+<section id="ap" hidden><h1>Confirmações</h1>
+<div class="tot"><div><b id="t1">0</b><small>Presentes</small></div><div><b id="t2">0</b><small>Ausentes</small></div><div><b id="t3">0</b><small>Total</small></div></div>
+<div class="row"><input id="q" type="search" placeholder="Pesquisar por nome" aria-label="Pesquisar por nome"><select id="fl" aria-label="Filtro"><option value="">Todos</option><option value="presente">Presentes</option><option value="ausente">Ausentes</option></select><button id="csv">Exportar CSV</button><button id="out">Sair</button></div>
+<div class="tw"><table><thead><tr><th>Nome</th><th>Telefone</th><th>Resposta</th><th>Data</th><th>Observação</th><th></th></tr></thead><tbody id="tb"></tbody></table></div></section>
+<dialog id="dg"><form method="dialog" id="df"><h2 style="font:400 28px Instrument Serif,serif">Editar registro</h2>
+<label for="dn">Nome</label><input id="dn" required><label for="dp">Telefone</label><input id="dp" required><label for="ds">Resposta</label><select id="ds"><option value="presente">Presente</option><option value="ausente">Ausente</option></select><label for="do">Observação</label><textarea id="do"></textarea>
+<div class="row"><button class="pr" value="ok">Salvar</button><button value="x" formnovalidate>Cancelar</button></div></form></dialog>
+<script>
+const $=s=>document.querySelector(s);let PW=sessionStorage.getItem('pw')||'',D=[],cur;
+const api=(m='GET',q='',b)=>fetch('/api/admin'+q,{method:m,headers:{'x-admin-password':PW,'Content-Type':'application/json'},body:b&&JSON.stringify(b)});
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function load(){const r=await api();if(!r.ok){sessionStorage.removeItem('pw');$('#lg').hidden=false;$('#ap').hidden=true;if(PW)$('#e').textContent='Senha incorreta.';return}
+ D=await r.json();$('#lg').hidden=true;$('#ap').hidden=false;draw()}
+function draw(){const q=$('#q').value.toLowerCase(),f=$('#fl').value;
+ $('#t1').textContent=D.filter(x=>x.status==='presente').length;$('#t2').textContent=D.filter(x=>x.status==='ausente').length;$('#t3').textContent=D.length;
+ $('#tb').innerHTML=D.filter(x=>(!f||x.status===f)&&x.name.toLowerCase().includes(q)).map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.phone)}</td><td><span class="tag ${x.status==='presente'?'p':''}">${x.status==='presente'?'Presente':'Ausente'}</span></td><td>${new Date(x.created_at).toLocaleString('pt-BR')}</td><td>${esc(x.note)}</td><td><button data-e="${x.id}">Editar</button> <button data-d="${x.id}">Excluir</button></td></tr>`).join('')||'<tr><td colspan="6">Nenhum registro.</td></tr>'}
+$('#lf').onsubmit=e=>{e.preventDefault();PW=$('#pw').value;sessionStorage.setItem('pw',PW);$('#e').textContent='';load()};
+$('#q').oninput=$('#fl').onchange=draw;$('#out').onclick=()=>{sessionStorage.removeItem('pw');PW='';location.reload()};
+$('#tb').onclick=async e=>{const d=e.target.dataset;if(d.d){const x=D.find(i=>i.id===d.d);if(confirm(`Excluir a resposta de ${x.name}? Esta ação não pode ser desfeita.`)){await api('DELETE','?id='+d.d);load()}}
+ if(d.e){cur=D.find(i=>i.id===d.e);$('#dn').value=cur.name;$('#dp').value=cur.phone;$('#ds').value=cur.status;$('#do').value=cur.note||'';$('#dg').showModal()}};
+$('#dg').onclose=async()=>{if($('#dg').returnValue!=='ok')return;if(!confirm('Confirmar a alteração deste registro?'))return;
+ const r=await api('PATCH','',{id:cur.id,name:$('#dn').value,phone:$('#dp').value,status:$('#ds').value,note:$('#do').value});if(!r.ok)alert('Não foi possível salvar (dados inválidos ou nome/telefone já cadastrado).');load()};
+$('#csv').onclick=()=>{const c=v=>`"${String(v??'').replace(/"/g,'""')}"`,rows=[['Nome','Telefone','Resposta','Data','Observação'],...D.map(x=>[x.name,x.phone,x.status,new Date(x.created_at).toLocaleString('pt-BR'),x.note])];
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+rows.map(r=>r.map(c).join(';')).join('\n')],{type:'text/csv;charset=utf-8'}));a.download='confirmacoes.csv';a.click()};
+if(PW)load();
+</script></body></html>

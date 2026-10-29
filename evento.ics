@@ -1,0 +1,17 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Baile de Inverno XV//PT
+BEGIN:VEVENT
+UID:xv-emanuelle-20261212@convite
+DTSTAMP:20261029T120000Z
+DTSTART:20261212T213000Z
+DTEND:20261213T013000Z
+SUMMARY:Baile de Inverno - XV anos de Emanuelle Knupp
+LOCATION:Edifício Vila Venetto\, Av. Antônio Gil Veloso\, 240\, Praia da Costa\, Vila Velha/ES
+BEGIN:VALARM
+TRIGGER:-P1D
+ACTION:DISPLAY
+DESCRIPTION:Amanhã: Baile de Inverno de Emanuelle
+END:VALARM
+END:VEVENT
+END:VCALENDAR
